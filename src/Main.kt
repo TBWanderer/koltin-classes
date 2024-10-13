@@ -10,9 +10,9 @@ class Lesson2HW {
         val mode = get.int("Enter mode: ")
         when (mode) {
             1 -> {
-                val a = get.int("")
-                val b = get.int("")
-                val c = get.int("")
+                val a = get.int("Enter section 1: ")
+                val b = get.int("Enter section 2: ")
+                val c = get.int("Enter section 3: ")
 
                 if (a < b + c && b < a + c && c < a + b) {
                     println("Triangle with gotten sections exists")
@@ -21,7 +21,7 @@ class Lesson2HW {
                 }
             }
             2 -> {
-                val hours = get.int("")
+                val hours = get.int("Enter count of hours: ")
 
                 when (hours) {
                     in 5..11 -> {
@@ -42,15 +42,16 @@ class Lesson2HW {
                 }
             }
             3 -> {
-                val year = get.int("")
+                val year = get.int("Enter year: ")
 
                 if (year % 4 == 0 && year % 100 != 0 || year % 400 == 0) {
                     println("The gotten year is Leap Year")
                 } else {
                     println("The gotten year isn't Leap Year")
                 }
+            }
             4 -> {
-                val score = get.int("")
+                val score = get.int("Enter score: ")
 
                 var scoreInRF = "";
                 var scoreInECTS = "";
@@ -60,38 +61,48 @@ class Lesson2HW {
                         scoreInRF = "2"
                         scoreInECTS = "F"
                     }
+
                     in 31..50 -> {
                         scoreInRF = "2"
                         scoreInECTS = "FX"
                     }
+
                     in 51..60 -> {
                         scoreInRF = "3"
                         scoreInECTS = "E"
                     }
+
                     in 61..68 -> {
                         scoreInRF = "3"
                         scoreInECTS = "D"
                     }
+
                     in 69..85 -> {
                         scoreInRF = "4"
                         scoreInECTS = "C"
                     }
+
                     in 86..94 -> {
                         scoreInRF = "5"
                         scoreInECTS = "B"
                     }
+
                     in 95..100 -> {
                         scoreInRF = "5"
                         scoreInECTS = "A"
                     }
+
                     else -> {
                         println("Incorrect score")
-                        return
+
                     }
                 }
 
                 println("Score in RF: $scoreInRF")
                 println("Score in ECTS: $scoreInECTS")
+            }
+            else -> {
+                println("Incorrect mode")
             }
         }
     }
