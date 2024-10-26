@@ -1,6 +1,53 @@
+import kotlin.math.PI
+
 fun main() {
-    val hw = Lesson3HW()
+    val hw = Lesson4HW()
     hw.run()
+}
+
+class Lesson4HW {
+    fun run() {
+        val get = Get()
+
+        val mode = get.int("Enter mode: ")
+        when (mode) {
+            1 -> {
+                val r = get.float("Enter radius (may to enter float point num): ")
+                val s = PI * r * r
+                println("S of circle with gotten radius: $s")
+            }
+            2 -> {
+                val numbers = get.str("Enter nums in one line: ").split(" ").mapNotNull {
+                    try {
+                        it.toInt()
+                    } catch (e: NumberFormatException) {
+                        null
+                    }
+                }
+
+                val cnt = numbers.count { it % 2 == 0 }
+
+                println("The number of even numbers: $cnt")
+            }
+            3 -> {
+                val n = get.int("Enter N to get N!: ")
+                println("$n! equals ${fact(n)}")
+            }
+        }
+    }
+
+    fun fact(n: Int) : Int {
+        if (n == 1) {
+            return 1
+        }
+
+        if (n <= 0 ) {
+            println("This num can't realized by this func to fact")
+            return -1
+        }
+
+        return n * fact(n-1)
+    }
 }
 
 class Lesson3HW {
@@ -217,6 +264,18 @@ class Get {
         } else {
             println("Input must be an integer")
             return int(prompt)
+        }
+    }
+
+    fun float(prompt: String) : Float {
+        print(prompt)
+        val res = readln().toFloatOrNull()
+
+        if (res != null) {
+            return res
+        } else {
+            println("Input must be floating point number")
+            return float(prompt)
         }
     }
 
