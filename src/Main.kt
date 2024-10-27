@@ -13,8 +13,7 @@ class Lesson4HW {
         when (mode) {
             1 -> {
                 val r = get.float("Enter radius (may to enter float point num): ")
-                val s = PI * r * r
-                println("S of circle with gotten radius: $s")
+                println("S of circle with gotten radius: ${circleArea(r)}")
             }
             2 -> {
                 val numbers = get.str("Enter nums in one line: ").split(" ").mapNotNull {
@@ -25,9 +24,7 @@ class Lesson4HW {
                     }
                 }
 
-                val cnt = numbers.count { it % 2 == 0 }
-
-                println("The number of even numbers: $cnt")
+                println("The number of even numbers: ${evenCount(numbers)}")
             }
             3 -> {
                 val n = get.int("Enter N to get N!: ")
@@ -36,7 +33,15 @@ class Lesson4HW {
         }
     }
 
-    fun fact(n: Int) : Int {
+    private fun circleArea(r: Float) : Double {
+        return PI * r * r
+    }
+
+    private fun evenCount(numbers: List<Int>) : Int {
+        return numbers.count { it % 2 == 0 }
+    }
+
+    private fun fact(n: Int) : Int {
         if (n == 1) {
             return 1
         }
