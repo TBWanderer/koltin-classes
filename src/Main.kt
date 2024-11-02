@@ -1,8 +1,141 @@
 import kotlin.math.PI
+import java.security.MessageDigest
 
 fun main() {
-    val hw = Lesson4HW()
+    val hw = Lesson5HW()
     hw.run()
+}
+
+class Lesson5HW {
+    fun run() {
+        val system = System()
+        val get = Get()
+
+        var currentUser: User? = null
+
+        val admin = User("General", "Admin", -1, "admin@system.com", "61ec299297407c2f668786b780c634b21a9520e5eaf4c6c2ab57750ebb8f4fa7", isAdmin = true)
+        system.addUser(admin)
+
+        while (true) {
+            var prompt: String = "> "
+            if (currentUser != null) {
+                prompt = "$ "
+                if (currentUser.isAdmin) {
+                    prompt = "# "
+                }
+            }
+
+            val command = get.str(prompt)
+            when (command) {
+                "login" -> {
+                    val email = get.str("Enter email: ")
+                    val password = get.str("Enter password: ")
+                    currentUser = system.logInUser(email, password)
+                }
+
+                "logout" -> if (currentUser != null) {
+                    system.logOutUser(currentUser)
+                    currentUser = null
+                } else {
+                    println("You are not authorized")
+                }
+
+                "adduser" -> if (currentUser != null && currentUser.isAdmin) {
+                    val name = get.str("Enter name: ")
+                    val surname = get.str("Enter surname: ")
+                    val age = get.int("Enter age: ")
+                    val email = get.str("Enter email: ")
+                    val password = get.str("Enter password for new user: ")
+                    var passwordAgain = get.str("Enter password again: ")
+                    while (passwordAgain != password) {
+                        println("Wrong!")
+                        passwordAgain = get.str("Enter password again: ")
+                    }
+                    val isAdmin = when (get.str("Is this user admin? (y|N): ")) {
+                        "Y" -> true
+                        "y" -> true
+                        "yes" -> true
+                        "Yes" -> true
+                        else -> false
+                    }
+                    val newUser = User(name, surname, age, email, hashPassword(password), isAdmin)
+                    system.addUser(newUser)
+                } else if (currentUser != null && !currentUser.isAdmin) {
+                    println("Operation does not permitted")
+                } else {
+                    println("You are not authorized")
+                }
+
+                "exit" -> break
+            }
+        }
+    }
+
+    private fun hashPassword(password: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(password.toByteArray())
+        return hashedBytes.joinToString("") { String.format("%02x", it) }
+    }
+
+    data class User(
+        val firstName: String,
+        val lastName: String,
+        val age: Int,
+        val email: String,
+        private val hashedPassword: String,
+        val isAdmin: Boolean,
+        var isAuthorized: Boolean = false,
+    ) {
+        fun checkPassword(password: String): Boolean {
+            return hashedPassword == hashPassword(password)
+        }
+
+        private fun hashPassword(password: String): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val hashedBytes = digest.digest(password.toByteArray())
+            return hashedBytes.joinToString("") { String.format("%02x", it) }
+        }
+    }
+
+    class System {
+        private val users = mutableListOf<User>()
+
+        fun addUser(user: User) {
+            if (users.any { it.email == user.email }) {
+                println("User with gotten email already exists")
+            } else {
+                users.add(user)
+                println("User ${user.firstName} ${user.lastName} added to the System")
+            }
+        }
+
+        fun logInUser(email: String, password: String): User? {
+            val user = users.find { it.email == email }
+            return if (user != null && !user.isAuthorized && user.checkPassword(password)) {
+                user.isAuthorized = true
+                println("User ${user.firstName} ${user.lastName} authorized")
+                user
+            } else if (user == null) {
+                println("Authorization Error. Gotten user does not exists")
+                null
+            } else if (user.isAuthorized){
+                println("Authorization Error. Gotten user already authorized")
+                null
+            } else {
+                println("Authorization Error. Wrong Password")
+                null
+            }
+        }
+
+        fun logOutUser(user: User) {
+            if (user.isAuthorized) {
+                user.isAuthorized = false
+                println("User ${user.firstName} ${user.lastName} logged out")
+            } else {
+                println("User ${user.firstName} ${user.lastName} not authorized")
+            }
+        }
+    }
 }
 
 class Lesson4HW {
@@ -42,7 +175,7 @@ class Lesson4HW {
     }
 
     private fun fact(n: Int) : Int {
-        if (n == 1) {
+        if (n == 1) {5
             return 1
         }
 
