@@ -1,3 +1,4 @@
+import jdk.jfr.Description
 import kotlin.math.PI
 import java.security.MessageDigest
 
@@ -11,62 +12,111 @@ class Lesson5HW {
         val system = System()
         val get = Get()
 
+        val adminLevel = 7
+
         var currentUser: User? = null
 
-        val admin = User("General", "Admin", -1, "admin@system.com", "61ec299297407c2f668786b780c634b21a9520e5eaf4c6c2ab57750ebb8f4fa7", isAdmin = true)
+        val helpCommand = Command("help", "Show available commands", -1)
+        val loginCommand = Command("login", "Authenticate user access", -1)
+        val logoutCommand = Command("logout", "End user session", 0)
+        val addCommand = Command("add", "Adding something new", adminLevel)
+        val exitCommand = Command("exit", "Close the application", -1)
+        system.addCommand(helpCommand, loginCommand, logoutCommand, addCommand, exitCommand)
+
+        val admin = User("General", "Admin", -1, "admin@system.com", "61ec299297407c2f668786b780c634b21a9520e5eaf4c6c2ab57750ebb8f4fa7", adminLevel)
         system.addUser(admin)
 
         while (true) {
-            var prompt: String = "> "
+            var prompt = "> "
             if (currentUser != null) {
                 prompt = "$ "
-                if (currentUser.isAdmin) {
+                if (currentUser.level >= adminLevel) {
                     prompt = "# "
                 }
             }
 
-            val command = get.str(prompt)
-            when (command) {
-                "login" -> {
-                    val email = get.str("Enter email: ")
-                    val password = get.str("Enter password: ")
-                    currentUser = system.logInUser(email, password)
+            val inputArgs = get.str(prompt).split(" ")
+            val command = system.getCommand(inputArgs[0])
+            if (command != null) {
+                var currentLevel = -1
+                if (currentUser != null) {
+                    currentLevel = currentUser.level
                 }
+                if (currentLevel >= command.level) {
+                    when (command.name) {
+                        "help" -> {
+                            for (commandObject in system.commands) {
+                                if (commandObject.level <= currentLevel) {
+                                    val someBeauty = 10
+                                    var line = commandObject.name + " "
+                                    for (temp in 1..someBeauty - commandObject.name.length) {
+                                        line += "."
+                                    }
+                                    line += " " + commandObject.description
+                                    println(line)
+                                }
+                            }
+                        }
 
-                "logout" -> if (currentUser != null) {
-                    system.logOutUser(currentUser)
-                    currentUser = null
+                        "login" -> {
+                            val email = get.str("Enter email: ")
+                            val password = get.str("Enter password: ")
+                            currentUser = system.logInUser(email, password)
+                        }
+
+                        "logout" -> if (currentUser != null) {
+                            system.logOutUser(currentUser)
+                            currentUser = null
+                        } else {
+                            println("You are not authorized")
+                        }
+
+                        "add" -> if (currentUser != null) {
+                            if (inputArgs.size == 2) {
+                                if (inputArgs[1] == "user") {
+                                    val name = get.str("Enter name: ")
+                                    val surname = get.str("Enter surname: ")
+                                    val age = get.int("Enter age: ", min = 0, max = 127)
+                                    val email = get.str("Enter email: ")
+                                    val password = get.str("Enter password for new user: ")
+                                    var passwordAgain = get.str("Enter password again: ")
+                                    while (passwordAgain != password) {
+                                        passwordAgain = get.str("Incorrect! Enter password again: ")
+                                    }
+                                    val userLevel = get.int("Enter user level: ", min = 0, max = adminLevel)
+                                    val newUser = User(name, surname, age, email, hashPassword(password), userLevel)
+                                    system.addUser(newUser)
+                                } else if (inputArgs[1] == "command") {
+                                    val name = get.str("Enter command name: ")
+                                    val description = get.str("Enter command description: ")
+                                    val level = get.int("Enter command level: ")
+
+                                    val newCommand = Command(name, description, level)
+                                    system.addCommand(newCommand)
+                                } else {
+                                    println("I can't do this =/")
+                                }
+                            } else if (inputArgs.size > 2) {
+                                println("There are too many arguments")
+                            } else {
+                                println("There are too few arguments")
+                            }
+                        } else {
+                            println("You are not authorized")
+                        }
+
+                        "exit" -> {
+                            if (currentUser != null) {
+                                system.logOutUser(currentUser)
+                            }
+                            break
+                        }
+                    }
                 } else {
-                    println("You are not authorized")
-                }
-
-                "adduser" -> if (currentUser != null && currentUser.isAdmin) {
-                    val name = get.str("Enter name: ")
-                    val surname = get.str("Enter surname: ")
-                    val age = get.int("Enter age: ")
-                    val email = get.str("Enter email: ")
-                    val password = get.str("Enter password for new user: ")
-                    var passwordAgain = get.str("Enter password again: ")
-                    while (passwordAgain != password) {
-                        println("Wrong!")
-                        passwordAgain = get.str("Enter password again: ")
-                    }
-                    val isAdmin = when (get.str("Is this user admin? (y|N): ")) {
-                        "Y" -> true
-                        "y" -> true
-                        "yes" -> true
-                        "Yes" -> true
-                        else -> false
-                    }
-                    val newUser = User(name, surname, age, email, hashPassword(password), isAdmin)
-                    system.addUser(newUser)
-                } else if (currentUser != null && !currentUser.isAdmin) {
                     println("Operation does not permitted")
-                } else {
-                    println("You are not authorized")
                 }
-
-                "exit" -> break
+            } else {
+                println("This command does not exists")
             }
         }
     }
@@ -77,13 +127,19 @@ class Lesson5HW {
         return hashedBytes.joinToString("") { String.format("%02x", it) }
     }
 
+    data class Command(
+        val name: String,
+        val description: String,
+        val level: Int,
+    )
+
     data class User(
         val firstName: String,
         val lastName: String,
         val age: Int,
         val email: String,
         private val hashedPassword: String,
-        val isAdmin: Boolean,
+        val level: Int,
         var isAuthorized: Boolean = false,
     ) {
         fun checkPassword(password: String): Boolean {
@@ -98,6 +154,7 @@ class Lesson5HW {
     }
 
     class System {
+        val commands = mutableListOf<Command>()
         private val users = mutableListOf<User>()
 
         fun addUser(user: User) {
@@ -134,6 +191,21 @@ class Lesson5HW {
             } else {
                 println("User ${user.firstName} ${user.lastName} not authorized")
             }
+        }
+
+        fun addCommand(vararg commandList: Command) {
+            for (command in commandList) {
+                commands.add(command)
+            }
+        }
+
+        fun getCommand(name: String): Command? {
+            for (command in commands) {
+                if (command.name == name) {
+                    return command
+                }
+            }
+            return null
         }
     }
 }
@@ -393,15 +465,18 @@ class Lesson1HW {
 }
 
 class Get {
-    fun int(prompt: String) : Int {
+    fun int(prompt: String, min: Int? = null, max: Int? = null) : Int {
         print(prompt)
         val res = readln().toIntOrNull()
-
         if (res != null) {
+            if (max != null && res > max || min != null && res < min) {
+                println("Out of limits! Limits: $min (min), $max (max)")
+                return int(prompt, min = min, max = max)
+            }
             return res
         } else {
             println("Input must be an integer")
-            return int(prompt)
+            return int(prompt, min = min, max = max)
         }
     }
 
