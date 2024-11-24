@@ -1,5 +1,5 @@
-import main.kotlin.homeworks.Lesson7
+import main.kotlin.homeworks.Lesson8
 
 fun main() {
-    Lesson7().run()
+    Lesson8().run()
 }
